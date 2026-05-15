@@ -7,6 +7,10 @@
 
 FROM oven/bun:1.3-alpine
 
+# USER before WORKDIR so /app is created bun-owned. Without this the dir
+# is created root-owned, USER bun cannot write into it, and `bun install`
+# fails to materialize node_modules with a cascade of ENOENT link errors.
+USER bun
 WORKDIR /app
 
 # Workspace manifests first for better layer cache.
@@ -14,7 +18,6 @@ COPY --chown=bun:bun package.json bun.lock tsconfig.base.json ./
 COPY --chown=bun:bun apps/lib/package.json ./apps/lib/
 COPY --chown=bun:bun apps/gateway/package.json ./apps/gateway/
 
-USER bun
 RUN bun install --frozen-lockfile
 
 # Source.
