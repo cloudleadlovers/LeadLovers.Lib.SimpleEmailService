@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "Send transactional emails through LeadLovers infrastructure.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leadlovers/LeadLovers.Lib.SimpleEmailService.git",
+    "directory": "apps/lib"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

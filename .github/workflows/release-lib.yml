@@ -17,11 +17,27 @@ jobs:
         with:
           node-version: 22
           registry-url: 'https://registry.npmjs.org'
+
       - run: bun install --frozen-lockfile
+
       - name: Build lib
         run: cd apps/lib && bun run build
+
       - name: Unit tests
         run: cd apps/lib && bun test tests/unit
+
+      - name: Sync apps/lib/package.json version from tag
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#lib-v}"
+          if [ "$VERSION" = "$GITHUB_REF_NAME" ] || [ -z "$VERSION" ]; then
+            echo "ERROR: tag '$GITHUB_REF_NAME' does not start with 'lib-v'"
+            exit 1
+          fi
+          cd apps/lib
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          echo "Publishing @leadlovers/simple-email-service@$VERSION"
+
       - name: Publish to npm
         run: cd apps/lib && npm publish --access public --provenance
         env:
