@@ -1,0 +1,41 @@
+# Mirror of devops/github-actions/ci.yml.
+# GitHub Actions only reads from .github/workflows/, so this file must stay in sync
+# with the canonical copy under devops/.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  bun:
+    name: Bun (typecheck + unit tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bunx prisma generate
+      - run: bun run typecheck
+      - run: bun test tests/unit
+
+  node:
+    name: Node ${{ matrix.node }} (build + smoke import)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - name: Smoke import on Node
+        run: |
+          node -e "import('./dist/index.js').then(m => { const keys = Object.keys(m); if (!keys.includes('email')) { console.error('missing email export'); process.exit(1); } console.log('Node ${{ matrix.node }} import OK:', keys); }).catch(e => { console.error(e); process.exit(1); })"

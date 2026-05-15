@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+model Emails {
+  id        BigInt   @id @default(autoincrement()) @map("EmailCodi")
+  projectId Int      @map("ProjCodi")
+  statusId  Int      @default(1) @map("StatCodi")
+  createdAt DateTime @default(now()) @map("EmailDataCada")
+  sendAt    DateTime @default(now()) @map("EmailDataEnviar")
+  to        String   @map("EmailPara") @db.NVarChar(510)
+  subject   String   @map("EmailAssunto") @db.NVarChar(510)
+  body      String   @map("EmailMsg") @db.NVarChar(Max)
+  isHtml    Boolean  @default(true) @map("EmailHtml")
+  attempts  Int      @default(0) @map("EmailTentativas")
+  priority  Int      @default(-1) @map("EmailPrioridade")
+  sendType  Int      @default(1) @map("EmailTipoEnvi")
+
+  @@map("EmailSequence")
+}
