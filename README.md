@@ -2,14 +2,39 @@
 
 Send transactional emails through LeadLovers infrastructure. The package writes one row per send into the `EmailSequence` table on the LeadLovers SQL Server database; the downstream LeadLovers worker dispatches the email.
 
-Runs on Node.js 20+ and Bun.
+## Consumer Requirements
+
+Before installing, confirm your project meets all of the following. The package will not work otherwise; there is no CommonJS build and no fallback for older Node versions.
+
+| Requirement     | Constraint                                                                          |
+| --------------- | ----------------------------------------------------------------------------------- |
+| Runtime         | **Node.js ≥ 20** or **Bun ≥ 1.0**. Node 18 and below are not supported.             |
+| Module system   | **ESM only**. Your `package.json` must declare `"type": "module"`, or you must use dynamic `import()` from CommonJS. There is no `require()` entry point. |
+| TypeScript      | Optional but recommended. Any version that supports `moduleResolution: "node16"`, `"nodenext"`, or `"bundler"` works. |
+| Peer deps       | `@prisma/client@^7`, `@prisma/adapter-mssql@^7`, `redis@^5`, `zod@^4` (see below).  |
+| Database access | Direct connection to the LeadLovers SQL Server via a connection string.             |
+| Redis           | A reachable Redis instance (any standard host: AWS ElastiCache, self-hosted, etc.). |
+
+### Not supported
+
+- Node.js 18 or earlier (including Node 12/14/16). Prisma 7 itself requires Node ≥ 18, and this package targets Node ≥ 20.
+- CommonJS-only projects. Migrate to ESM, or stand up a thin HTTP wrapper around this lib that legacy projects can call over the network.
+- Bun's built-in `Bun.redis` as a substitute for the `redis` peer dep. The lib imports from the npm `redis` package directly; even on Bun you must install `redis` in your `package.json`. A `Bun.redis` adapter is on the v0.2 roadmap.
+- Bundled deployments that try to bundle `@prisma/client`. Leave it as an external dependency.
 
 ## Install
 
 ```bash
 npm i @leadlovers/simple-email-service
-# also install the peer deps if you don't already have them
+# install peer deps if your project doesn't have them yet
 npm i @prisma/client @prisma/adapter-mssql redis zod
+```
+
+Bun-native projects use the same packages:
+
+```bash
+bun add @leadlovers/simple-email-service
+bun add @prisma/client @prisma/adapter-mssql redis zod
 ```
 
 The package ships with a pre-generated Prisma Client tailored to the LeadLovers `EmailSequence` table; you do not need to run `prisma generate` yourself.
