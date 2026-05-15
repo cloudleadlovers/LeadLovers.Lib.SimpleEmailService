@@ -269,11 +269,12 @@ Every numbered step that "returns failure" produces an `EmailSendResult` with `s
 
 ## 13. DevOps and Release Pipeline
 
-- All CI/CD config lives under `devops/`:
-  - `devops/github-actions/ci.yml`: lint, typecheck, `bun test`, smoke on Node 20+ and Bun.
-  - `devops/github-actions/release.yml`: triggered on `v*` tag push. Builds, runs tests, `npm publish --access public` using `NPM_TOKEN` secret. Uses `--provenance` for supply-chain attestation.
+The repo is a Bun-workspaces monorepo. Each app owns its own deploy artifacts; CI is repo-wide.
+
+- **CI** (`.github/workflows/ci.yml`): on every push/PR, installs the workspace, generates the Prisma client, typechecks every workspace, runs `bun test` across every workspace, and runs a dual-runtime build + smoke import of the lib on Node 20 and Node 22.
+- **Lib release** (`.github/workflows/release-lib.yml`): triggers on `lib-v*` tag push. Builds the lib, runs unit tests, `npm publish --access public --provenance` using `NPM_TOKEN`. First release (`lib-v0.1.0`) cut manually to validate, then automated thereafter.
+- **Gateway release** (`apps/gateway/azure-pipelines.gateway.yml`): path-filtered trigger on `main`. Stage 1 builds + pushes the Docker image to Docker Hub (`cloudlovers/leadlovers-email-gateway`) via the `CloudLovers - Docker Hub` service connection. Stage 2 runs on the `OCI-LeadLovers022` self-hosted pool, stages `docker-compose.yml` + a `.env` from pipeline variables (group `email-gateway-production`), and runs `docker compose up -d`.
 - Branch protection on `main` requires `ci.yml` green.
-- First release (`v0.1.0`) cut manually to validate the pipeline end-to-end, then automated thereafter.
 
 ## 14. Testing Strategy
 
@@ -301,7 +302,7 @@ Every numbered step that "returns failure" produces an `EmailSendResult` with `s
 1. **M1: Schema + clients.** Lock the `Emails` Prisma model against the live DB, set up Prisma + Redis clients, env config + Zod boot validation.
 2. **M2: Core path.** Zod DTO, `email.send` happy path with DB write only. Unit tests green.
 3. **M3: Idempotency + rate limit.** Redis flow integrated, integration tests against real DB + Redis including the `SET NX` race path.
-4. **M4: DevOps.** `devops/github-actions/{ci,release}.yml`, NPM token, dual-runtime smoke.
+4. **M4: DevOps.** `.github/workflows/{ci,release-lib}.yml` for CI + lib release, NPM token, dual-runtime smoke. Gateway pipeline (`apps/gateway/azure-pipelines.gateway.yml`) for Docker build + OCI deploy.
 5. **M5: Docs + LICENSE + v0.1.0 release.**
 
 Release gate: `EmailSequence` must already exist on the target DB. Redis is the consumer's runtime responsibility, not a release blocker; the lib boots-fails with `EmailConfigError` when `REDIS_URL` is missing.
