@@ -70,7 +70,6 @@ stages:
     jobs:
       - deployment: Deploy
         displayName: docker compose up
-        environment: production-email-gateway
         strategy:
           runOnce:
             deploy:
