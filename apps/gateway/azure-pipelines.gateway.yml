@@ -28,7 +28,7 @@ variables:
   # Adjust the variable-group name to whatever exists in this Azure DevOps
   # project; it must provide DATABASE_URL, REDIS_URL, and GATEWAY_API_KEY
   # (all secret).
-  - group: email-gateway-production
+  - group: leadlovers-ses-production
   - name: imageName
     value: cloudlovers/leadlovers-email-gateway
   - name: imageTag

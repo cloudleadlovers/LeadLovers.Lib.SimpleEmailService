@@ -145,7 +145,7 @@ The gateway uses Azure Pipelines, not GitHub Actions, because it deploys to the 
 
 Before the first deployment:
 
-1. Create the Azure DevOps variable group `email-gateway-production` containing `DATABASE_URL`, `REDIS_URL`, and `GATEWAY_API_KEY` (all marked secret).
+1. Create the Azure DevOps variable group `leadlovers-ses-production` containing `DATABASE_URL`, `REDIS_URL`, and `GATEWAY_API_KEY` (all marked secret).
 2. Create the `production-email-gateway` environment so deployment approvals and audit logs work.
 
 The pipeline writes `apps/gateway/devops/docker-compose.yml` to the host with image, container name, port mapping, and external network injected from variables, so production-only values never live in the repo.

@@ -271,7 +271,7 @@ The repo is a Bun-workspaces monorepo. Each app owns its own deploy artifacts; C
 
 - **CI** (`.github/workflows/ci.yml`): on every push/PR, installs the workspace, generates the Prisma client, typechecks every workspace, runs `bun test` across every workspace, and runs a dual-runtime build + smoke import of the lib on Node 20 and Node 22.
 - **Lib release** (`.github/workflows/release-lib.yml`): triggers on `lib-v*` tag push. Builds the lib, runs unit tests, `npm publish --access public --provenance` using `NPM_TOKEN`. First release (`lib-v0.1.0`) cut manually to validate, then automated thereafter.
-- **Gateway release** (`apps/gateway/azure-pipelines.gateway.yml`): path-filtered trigger on `main`. Stage 1 builds + pushes the Docker image to Docker Hub (`cloudlovers/leadlovers-email-gateway`) via the `CloudLovers - Docker Hub` service connection. Stage 2 runs on the `OCI-LeadLovers022` self-hosted pool, stages `docker-compose.yml` + a `.env` from pipeline variables (group `email-gateway-production`), and runs `docker compose up -d`.
+- **Gateway release** (`apps/gateway/azure-pipelines.gateway.yml`): path-filtered trigger on `main`. Stage 1 builds + pushes the Docker image to Docker Hub (`cloudlovers/leadlovers-email-gateway`) via the `CloudLovers - Docker Hub` service connection. Stage 2 runs on the `OCI-LeadLovers022` self-hosted pool, stages `docker-compose.yml` + a `.env` from pipeline variables (group `leadlovers-ses-production`), and runs `docker compose up -d`.
 - Branch protection on `main` requires `ci.yml` green.
 
 ## 14. Testing Strategy
