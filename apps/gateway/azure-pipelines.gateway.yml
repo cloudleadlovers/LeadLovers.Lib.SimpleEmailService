@@ -1,0 +1,102 @@
+# Builds and deploys the email gateway.
+#
+# Pattern cloned from LeadLovers.LandingPages.Leadia:
+# stage 1 builds the Docker image and pushes it to Docker Hub via the
+# `CloudLovers - Docker Hub` service connection; stage 2 stages
+# docker-compose.yml onto the OCI agent and runs `docker compose up -d`.
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - apps/gateway/**
+      - apps/lib/**
+      - package.json
+      - bun.lock
+      - tsconfig.base.json
+    exclude:
+      - apps/lib/README.md
+      - apps/lib/PRD.md
+      - apps/lib/devops/github-actions/**
+
+pool:
+  name: OCI-LeadLovers022
+
+variables:
+  # Adjust the variable-group name to whatever exists in this Azure DevOps
+  # project; it must provide DATABASE_URL, REDIS_URL, SES_RATE_LIMIT_PER_MINUTE,
+  # and GATEWAY_API_KEY (all secret).
+  - group: email-gateway-production
+  - name: imageName
+    value: cloudlovers/leadlovers-email-gateway
+  - name: imageTag
+    value: $(Build.BuildNumber)
+  - name: containerName
+    value: leadlovers-email-gateway
+  - name: portInner
+    value: '8787'
+  - name: portOuter
+    value: '8787'
+  - name: networkName
+    value: leadlovers-internal
+  - name: deployPath
+    value: /var/docker/leadlovers/email-gateway/production
+
+stages:
+  - stage: BuildAndPush
+    displayName: Build and push image
+    jobs:
+      - job: Build
+        displayName: docker build + push
+        steps:
+          - task: Docker@2
+            displayName: Login, build and push
+            inputs:
+              containerRegistry: 'CloudLovers - Docker Hub'
+              repository: $(imageName)
+              command: buildAndPush
+              Dockerfile: apps/gateway/devops/Dockerfile
+              buildContext: $(Build.SourcesDirectory)
+              tags: |
+                $(imageTag)
+                latest
+
+  - stage: Deploy
+    displayName: Deploy to OCI
+    dependsOn: BuildAndPush
+    condition: succeeded()
+    jobs:
+      - deployment: Deploy
+        displayName: docker compose up
+        environment: production-email-gateway
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - script: |
+                    set -euo pipefail
+                    mkdir -p "$(deployPath)"
+                    cp apps/gateway/devops/docker-compose.yml "$(deployPath)/docker-compose.yml"
+                    cd "$(deployPath)"
+                    cat > .env <<EOF
+                    DOCKER_IMAGE=docker.io/$(imageName):$(imageTag)
+                    CONTAINER_NAME=$(containerName)
+                    PORT_INNER=$(portInner)
+                    PORT_OUTER=$(portOuter)
+                    NETWORK_NAME=$(networkName)
+                    DATABASE_URL=$DATABASE_URL
+                    REDIS_URL=$REDIS_URL
+                    SES_RATE_LIMIT_PER_MINUTE=$SES_RATE_LIMIT_PER_MINUTE
+                    GATEWAY_API_KEY=$GATEWAY_API_KEY
+                    EOF
+                    docker compose pull
+                    docker compose up -d --remove-orphans
+                  displayName: stage compose, write .env, compose up
+                  env:
+                    DATABASE_URL: $(DATABASE_URL)
+                    REDIS_URL: $(REDIS_URL)
+                    SES_RATE_LIMIT_PER_MINUTE: $(SES_RATE_LIMIT_PER_MINUTE)
+                    GATEWAY_API_KEY: $(GATEWAY_API_KEY)
