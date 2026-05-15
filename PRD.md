@@ -119,7 +119,7 @@ Zod issues are flattened into a semicolon-separated list (`error: 'to must be a 
 
 Fixed message + numeric `retryAfterMs` (millis until window end):
 
-- `rate limit exceeded: {limit} sends per minute per project` (where `{limit}` resolves to the active `SES_RATE_LIMIT_PER_MINUTE`)
+- `rate limit exceeded: 60 sends per minute per project`
 
 #### 5.3.3 `persistence_error`
 
@@ -147,13 +147,12 @@ Mapped from Prisma error codes. No raw SQL, no row contents, no PII:
 
 #### 5.3.5 `EmailConfigError` (thrown, not returned)
 
-| Cause                                              | Message                                                |
-| -------------------------------------------------- | ------------------------------------------------------ |
-| `DATABASE_URL` missing                             | `missing required env var DATABASE_URL`                |
-| `DATABASE_URL` malformed                           | `invalid DATABASE_URL: {reason}`                       |
-| `REDIS_URL` missing                                | `missing required env var REDIS_URL`                   |
-| `REDIS_URL` malformed                              | `invalid REDIS_URL: {reason}`                          |
-| `SES_RATE_LIMIT_PER_MINUTE` not a positive integer | `SES_RATE_LIMIT_PER_MINUTE must be a positive integer` |
+| Cause                    | Message                                 |
+| ------------------------ | --------------------------------------- |
+| `DATABASE_URL` missing   | `missing required env var DATABASE_URL` |
+| `DATABASE_URL` malformed | `invalid DATABASE_URL: {reason}`        |
+| `REDIS_URL` missing      | `missing required env var REDIS_URL`    |
+| `REDIS_URL` malformed    | `invalid REDIS_URL: {reason}`           |
 
 ## 6. Data Layer
 
@@ -201,8 +200,8 @@ A future v0.2 may introduce per-caller identity (DB-backed API keys with quotas)
 ## 8. Rate Limiting (Redis-backed)
 
 - Per `projectId`, fixed-window counter at 1-minute granularity.
-- Default quota: `60 sends/min/project`. Configurable per env via `SES_RATE_LIMIT_PER_MINUTE`. Per-project overrides deferred to v0.2.
-- Implementation: `INCR ses:rl:{projectId}:{unixMinute}` followed by `EXPIRE 65` on the same key (covers clock skew). Compare result against limit.
+- Quota: `60 sends/min/project`, hardcoded as `RATE_LIMIT_PER_MINUTE` in `apps/lib/src/cache/rate-limit.ts`. Not exposed via env; callers cannot override. Per-project overrides deferred to v0.2.
+- Implementation: `INCR ses:rl:{projectId}:{unixMinute}` followed by `EXPIRE 65` on the same key (covers clock skew). Compare result against the constant.
 - On limit hit, the result is `{ success: false, code: 'rate_limited', error, retryAfterMs }` where `retryAfterMs = (windowEnd - now)`. No DB write happens.
 - Rate-limit check runs before the DB insert. No transactional coupling with the DB.
 
@@ -227,11 +226,10 @@ A future v0.2 may introduce per-caller identity (DB-backed API keys with quotas)
 
 `.env` keys:
 
-| Key                         | Required | Description                                                 |
-| --------------------------- | -------- | ----------------------------------------------------------- |
-| `DATABASE_URL`              | yes      | LeadLovers DB connection string (Prisma).                   |
-| `REDIS_URL`                 | yes      | Redis connection string. Missing throws `EmailConfigError`. |
-| `SES_RATE_LIMIT_PER_MINUTE` | no       | Integer. Default `60`.                                      |
+| Key            | Required | Description                                                 |
+| -------------- | -------- | ----------------------------------------------------------- |
+| `DATABASE_URL` | yes      | LeadLovers DB connection string (Prisma).                   |
+| `REDIS_URL`    | yes      | Redis connection string. Missing throws `EmailConfigError`. |
 
 Boot-time validation: Zod schema reads `process.env` once on lazy init and throws `EmailConfigError` on any failure.
 

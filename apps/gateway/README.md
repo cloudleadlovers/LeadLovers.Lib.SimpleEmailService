@@ -32,7 +32,6 @@ The response body is always the JSON-serialized `EmailSendResult`. `id` is rende
 | ---------------------------- | ----------------------- | --------------------------------------------------------------------- |
 | `DATABASE_URL`               | yes                     | Passed straight to the lib.                                           |
 | `REDIS_URL`                  | yes                     | Passed straight to the lib.                                           |
-| `SES_RATE_LIMIT_PER_MINUTE`  | no (default `60`)       | Passed straight to the lib.                                           |
 | `PORT`                       | no (default `8787`)     | Port the gateway listens on.                                          |
 | `GATEWAY_API_KEY`            | no                      | If set, every request to `/v1/emails/send` must include `x-internal-key: <value>`. If unset, no app-level auth (trust boundary moves to the network layer / firewall). |
 

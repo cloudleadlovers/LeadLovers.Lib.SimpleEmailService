@@ -1,5 +1,7 @@
 import type { RedisLike } from './redis.js';
 
+export const RATE_LIMIT_PER_MINUTE = 60;
+
 const WINDOW_TTL_SECONDS = 65;
 
 export interface RateLimitDecision {

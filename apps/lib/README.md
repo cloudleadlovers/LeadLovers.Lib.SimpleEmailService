@@ -41,11 +41,10 @@ The package ships with a pre-generated Prisma Client tailored to the internal sc
 
 ## Environment
 
-| Var                          | Required | Default | Description                                                            |
-| ---------------------------- | -------- | ------- | ---------------------------------------------------------------------- |
-| `DATABASE_URL`               | yes      | —       | Connection string issued by LeadLovers ops.                            |
-| `REDIS_URL`                  | yes      | —       | Redis URL used for idempotency cache and per-project rate-limit state. |
-| `SES_RATE_LIMIT_PER_MINUTE`  | no       | `60`    | Positive integer. Sends per minute per `projectId`.                    |
+| Var            | Required | Description                                                            |
+| -------------- | -------- | ---------------------------------------------------------------------- |
+| `DATABASE_URL` | yes      | Connection string issued by LeadLovers ops.                            |
+| `REDIS_URL`    | yes      | Redis URL used for idempotency cache and per-project rate-limit state. |
 
 A missing or invalid value throws `EmailConfigError` on the first call to `email.send`.
 
@@ -121,7 +120,7 @@ A `bypassIdempotency` flag is on the v0.2 roadmap.
 
 ## Rate Limiting
 
-Per `projectId`, fixed 1-minute window, default 60 sends/minute. Override via `SES_RATE_LIMIT_PER_MINUTE`.
+Per `projectId`, fixed 1-minute window, 60 sends per minute. Not configurable.
 
 On limit hit, the call returns `{ success: false, code: 'rate_limited', error, retryAfterMs }`. `retryAfterMs` is the time until the window resets. No queued send is created.
 

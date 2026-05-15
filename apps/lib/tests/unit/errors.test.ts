@@ -71,10 +71,6 @@ describe('Messages catalog', () => {
     test('redisMissing', () => expect(Messages.config.redisMissing()).toBe('missing required env var REDIS_URL'));
     test('redisInvalid interpolates reason', () =>
       expect(Messages.config.redisInvalid('refused')).toBe('invalid REDIS_URL: refused'));
-    test('rateLimitNotPositive', () =>
-      expect(Messages.config.rateLimitNotPositive()).toBe(
-        'SES_RATE_LIMIT_PER_MINUTE must be a positive integer',
-      ));
   });
 });
 

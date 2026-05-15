@@ -10,7 +10,6 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
-      - SES_RATE_LIMIT_PER_MINUTE=${SES_RATE_LIMIT_PER_MINUTE:-60}
       - GATEWAY_API_KEY=${GATEWAY_API_KEY:-}
       - PORT=${PORT_INNER:-8787}
     ports:

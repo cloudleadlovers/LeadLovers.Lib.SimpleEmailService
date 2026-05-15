@@ -4,13 +4,12 @@ import { getPrisma } from './db/prisma.js';
 import { getRedis } from './cache/redis.js';
 import { mapPrismaError } from './db/error-map.js';
 import { mapRedisError } from './cache/error-map.js';
-import { loadConfig } from './config.js';
 import {
   computeIdempotencyHash,
   getCached,
   setCachedNX,
 } from './cache/idempotency.js';
-import { checkRateLimit } from './cache/rate-limit.js';
+import { checkRateLimit, RATE_LIMIT_PER_MINUTE } from './cache/rate-limit.js';
 import { Messages } from './errors.js';
 import { getLogger } from './utils/logger.js';
 
@@ -22,7 +21,6 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
   }
   const { projectId, to, subject, message } = parsed.data;
 
-  const cfg = loadConfig();
   const prisma = getPrisma();
 
   let redis;
@@ -49,7 +47,7 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
 
   let decision;
   try {
-    decision = await checkRateLimit(redis, projectId, cfg.SES_RATE_LIMIT_PER_MINUTE);
+    decision = await checkRateLimit(redis, projectId, RATE_LIMIT_PER_MINUTE);
   } catch (err) {
     return { success: false, code: 'cache_error', error: mapRedisError(err) };
   }
@@ -57,7 +55,7 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
     return {
       success: false,
       code: 'rate_limited',
-      error: Messages.rateLimit(cfg.SES_RATE_LIMIT_PER_MINUTE),
+      error: Messages.rateLimit(RATE_LIMIT_PER_MINUTE),
       retryAfterMs: decision.retryAfterMs,
     };
   }

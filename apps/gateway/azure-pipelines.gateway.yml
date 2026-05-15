@@ -26,8 +26,8 @@ pool:
 
 variables:
   # Adjust the variable-group name to whatever exists in this Azure DevOps
-  # project; it must provide DATABASE_URL, REDIS_URL, SES_RATE_LIMIT_PER_MINUTE,
-  # and GATEWAY_API_KEY (all secret).
+  # project; it must provide DATABASE_URL, REDIS_URL, and GATEWAY_API_KEY
+  # (all secret).
   - group: email-gateway-production
   - name: imageName
     value: cloudlovers/leadlovers-email-gateway
@@ -89,7 +89,6 @@ stages:
                     NETWORK_NAME=$(networkName)
                     DATABASE_URL=$DATABASE_URL
                     REDIS_URL=$REDIS_URL
-                    SES_RATE_LIMIT_PER_MINUTE=$SES_RATE_LIMIT_PER_MINUTE
                     GATEWAY_API_KEY=$GATEWAY_API_KEY
                     EOF
                     docker compose pull
@@ -98,5 +97,4 @@ stages:
                   env:
                     DATABASE_URL: $(DATABASE_URL)
                     REDIS_URL: $(REDIS_URL)
-                    SES_RATE_LIMIT_PER_MINUTE: $(SES_RATE_LIMIT_PER_MINUTE)
                     GATEWAY_API_KEY: $(GATEWAY_API_KEY)

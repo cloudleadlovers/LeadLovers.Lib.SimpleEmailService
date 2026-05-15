@@ -34,8 +34,6 @@ export const Messages = {
     dbInvalid: (reason: string): string => `invalid DATABASE_URL: ${reason}`,
     redisMissing: (): string => 'missing required env var REDIS_URL',
     redisInvalid: (reason: string): string => `invalid REDIS_URL: ${reason}`,
-    rateLimitNotPositive: (): string =>
-      'SES_RATE_LIMIT_PER_MINUTE must be a positive integer',
   },
 } as const;
 
