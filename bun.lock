@@ -9,6 +9,21 @@
         "typescript": "^5",
       },
     },
+    "apps/gateway": {
+      "name": "@leadlovers/simple-email-gateway",
+      "version": "0.1.0",
+      "dependencies": {
+        "@leadlovers/simple-email-service": "workspace:*",
+        "@prisma/adapter-mssql": "^7.0.0",
+        "@prisma/client": "^7.0.0",
+        "redis": "^5.0.0",
+        "zod": "^4.0.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "typescript": "^5",
+      },
+    },
     "apps/lib": {
       "name": "@leadlovers/simple-email-service",
       "version": "0.1.0",
@@ -75,6 +90,8 @@
     "@js-joda/core": ["@js-joda/core@5.7.0", "", {}, "sha512-WBu4ULVVxySLLzK1Ppq+OdfP+adRS4ntmDQT915rzDJ++i95gc2jZkM5B6LWEAwN3lGXpfie3yPABozdD3K3Vg=="],
 
     "@kurkle/color": ["@kurkle/color@0.3.4", "", {}, "sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w=="],
+
+    "@leadlovers/simple-email-gateway": ["@leadlovers/simple-email-gateway@workspace:apps/gateway"],
 
     "@leadlovers/simple-email-service": ["@leadlovers/simple-email-service@workspace:apps/lib"],
 
