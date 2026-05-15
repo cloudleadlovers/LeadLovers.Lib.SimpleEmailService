@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { mapPrismaError } from '../../src/db/error-map.js';
+import { mapPrismaError } from '../../../src/db/error-map.js';
 
 describe('mapPrismaError', () => {
   test('P1001 → cannot reach the LeadLovers database', () => {

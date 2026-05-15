@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
-import { checkRateLimit } from '../../src/cache/rate-limit.js';
-import type { RedisLike } from '../../src/cache/redis.js';
+import { checkRateLimit } from '../../../src/cache/rate-limit.js';
+import type { RedisLike } from '../../../src/cache/redis.js';
 
 function fakeRedis(): RedisLike & {
   counters: Map<string, number>;
