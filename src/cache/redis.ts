@@ -1,6 +1,6 @@
 import { createClient } from 'redis';
-import { loadConfig } from './config.js';
-import { getLogger } from './logger.js';
+import { loadConfig } from '../config.js';
+import { getLogger } from '../utils/logger.js';
 
 export type RedisLike = ReturnType<typeof createClient>;
 

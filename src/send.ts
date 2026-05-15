@@ -1,18 +1,18 @@
 import { EmailSendInputSchema, type EmailSendInput } from './schema.js';
 import type { EmailSendResult, EmailSendSuccess } from './types.js';
-import { getPrisma } from './prisma.js';
-import { getRedis } from './redis.js';
-import { mapPrismaError } from './prisma-error-map.js';
-import { mapRedisError } from './redis-error-map.js';
+import { getPrisma } from './db/prisma.js';
+import { getRedis } from './cache/redis.js';
+import { mapPrismaError } from './db/error-map.js';
+import { mapRedisError } from './cache/error-map.js';
 import { loadConfig } from './config.js';
 import {
   computeIdempotencyHash,
   getCached,
   setCachedNX,
-} from './idempotency.js';
-import { checkRateLimit } from './rate-limit.js';
+} from './cache/idempotency.js';
+import { checkRateLimit } from './cache/rate-limit.js';
 import { Messages } from './errors.js';
-import { getLogger } from './logger.js';
+import { getLogger } from './utils/logger.js';
 
 export async function send(input: EmailSendInput): Promise<EmailSendResult> {
   const parsed = EmailSendInputSchema.safeParse(input);

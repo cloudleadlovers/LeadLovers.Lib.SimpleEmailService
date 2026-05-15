@@ -7,4 +7,4 @@ export type {
   EmailSendFailure,
   EmailErrorCode,
 } from './types.js';
-export type { Logger } from './logger.js';
+export type { Logger } from './utils/logger.js';

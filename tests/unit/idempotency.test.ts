@@ -4,8 +4,8 @@ import {
   idempotencyCacheKey,
   getCached,
   setCachedNX,
-} from '../../src/idempotency.js';
-import type { RedisLike } from '../../src/redis.js';
+} from '../../src/cache/idempotency.js';
+import type { RedisLike } from '../../src/cache/redis.js';
 
 interface SetOptions {
   condition?: string;

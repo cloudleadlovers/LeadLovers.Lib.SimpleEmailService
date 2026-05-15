@@ -1,4 +1,4 @@
-import { Messages } from './errors.js';
+import { Messages } from '../errors.js';
 
 interface PrismaLikeError {
   code?: string;

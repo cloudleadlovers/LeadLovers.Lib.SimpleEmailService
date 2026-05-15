@@ -1,7 +1,7 @@
 import { PrismaMssql } from '@prisma/adapter-mssql';
-import { PrismaClient } from './generated/prisma/index.js';
-import { EmailConfigError, Messages } from './errors.js';
-import { loadConfig } from './config.js';
+import { PrismaClient } from '../generated/prisma/index.js';
+import { EmailConfigError, Messages } from '../errors.js';
+import { loadConfig } from '../config.js';
 
 let client: PrismaClient | undefined;
 
