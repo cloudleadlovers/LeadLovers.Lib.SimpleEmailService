@@ -70,6 +70,7 @@ stages:
     jobs:
       - deployment: Deploy
         displayName: docker compose up
+        environment: Production
         strategy:
           runOnce:
             deploy:
