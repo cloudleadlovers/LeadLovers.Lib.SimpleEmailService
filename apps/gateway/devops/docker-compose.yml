@@ -1,0 +1,30 @@
+# Staged onto the OCI agent by azure-pipelines.gateway.yml.
+# Environment variables are injected by the pipeline at `docker compose up`
+# time; defaults below kick in only when a value is intentionally omitted.
+
+services:
+  email-gateway:
+    image: ${DOCKER_IMAGE}
+    container_name: ${CONTAINER_NAME}
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - SES_RATE_LIMIT_PER_MINUTE=${SES_RATE_LIMIT_PER_MINUTE:-60}
+      - GATEWAY_API_KEY=${GATEWAY_API_KEY:-}
+      - PORT=${PORT_INNER:-8787}
+    ports:
+      - "${PORT_OUTER}:${PORT_INNER:-8787}"
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:' + (process.env.PORT||8787) + '/health').then(r => r.ok || process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  default:
+    name: ${NETWORK_NAME}
+    external: true

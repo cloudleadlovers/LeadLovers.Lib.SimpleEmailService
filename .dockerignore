@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/coverage
+apps/lib/src/generated
+.git
+.github
+.vscode
+.idea
+.DS_Store
+*.log
+*.tsbuildinfo
+.env
+.env.*
