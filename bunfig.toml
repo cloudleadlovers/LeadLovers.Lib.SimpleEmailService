@@ -1,0 +1,14 @@
+# Use the hoisted (flat) node_modules layout instead of Bun's default
+# pnpm-style isolated store.
+#
+# Prisma's generated client (under apps/lib/dist/generated/prisma/) lives
+# outside the @prisma/client package directory, so it can only resolve
+# transitive Prisma deps like @prisma/client-runtime-utils via standard
+# upward node_modules walk. With the isolated layout those packages sit in
+# .bun/<pkg>@<version>/node_modules/ and the walk can't see them, so the
+# generated client fails with "Cannot find module".
+#
+# Hoisted layout flattens every transitive dep into the workspace-root
+# node_modules and the walk works again.
+[install]
+linker = "hoisted"
