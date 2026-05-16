@@ -78,6 +78,14 @@ stages:
                 - checkout: self
                 - script: |
                     set -euo pipefail
+
+                    # Ensure the shared internal network exists. docker-compose.yml
+                    # marks it `external: true`, so compose expects us to have
+                    # created it out-of-band. Idempotent: errors if already present
+                    # and we swallow that. Drop this once the network is managed
+                    # by infra-as-code or another canonical owner.
+                    docker network create "$(networkName)" 2>/dev/null || true
+
                     mkdir -p "$(deployPath)"
                     cp apps/gateway/devops/docker-compose.yml "$(deployPath)/docker-compose.yml"
                     cd "$(deployPath)"
