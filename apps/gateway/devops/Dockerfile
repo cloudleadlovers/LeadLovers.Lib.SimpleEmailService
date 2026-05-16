@@ -18,7 +18,12 @@ COPY --chown=bun:bun package.json bun.lock tsconfig.base.json ./
 COPY --chown=bun:bun apps/lib/package.json ./apps/lib/
 COPY --chown=bun:bun apps/gateway/package.json ./apps/gateway/
 
-RUN bun install --frozen-lockfile
+# --backend=copyfile avoids hardlinks. The OCI agent runs the legacy
+# Docker builder, whose overlay semantics break Bun's default hardlink
+# install backend with a cascade of ENOENT link errors. Copyfile is
+# slower but works on every builder. Drop this flag once the agent
+# is upgraded to BuildKit.
+RUN bun install --frozen-lockfile --backend=copyfile
 
 # Source.
 COPY --chown=bun:bun apps/lib ./apps/lib
