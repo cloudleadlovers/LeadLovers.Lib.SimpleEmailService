@@ -15,6 +15,7 @@ trigger:
       - apps/lib/**
       - package.json
       - bun.lock
+      - bunfig.toml
       - tsconfig.base.json
     exclude:
       - apps/lib/README.md

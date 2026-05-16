@@ -18,7 +18,11 @@ USER root
 WORKDIR /app
 
 # Workspace manifests first for better layer cache.
-COPY package.json bun.lock tsconfig.base.json ./
+# bunfig.toml is required so `bun install` uses the hoisted node_modules
+# layout. Without it, Bun's default isolated store hides transitive deps
+# like @prisma/client-runtime-utils from the generated Prisma client's
+# upward module-resolution walk.
+COPY package.json bun.lock bunfig.toml tsconfig.base.json ./
 COPY apps/lib/package.json ./apps/lib/
 COPY apps/gateway/package.json ./apps/gateway/
 
