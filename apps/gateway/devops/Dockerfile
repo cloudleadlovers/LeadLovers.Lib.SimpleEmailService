@@ -31,8 +31,12 @@ RUN bun install --frozen-lockfile --backend=copyfile
 COPY apps/lib ./apps/lib
 COPY apps/gateway ./apps/gateway
 
-# Generate the Prisma client into apps/lib/src/generated/prisma/.
-RUN cd apps/lib && bunx prisma generate
+# Build the lib so apps/lib/dist/ exists. The lib's package.json points
+# `main`, `types`, and `exports` at ./dist/index.js; without this step
+# the gateway's `import '@leadlovers/simple-email-service'` resolves to
+# a missing file. `bun run build` runs prisma generate, tsc, and copies
+# the generated client into dist/.
+RUN cd apps/lib && bun run build
 
 ENV NODE_ENV=production
 ENV PORT=8787
