@@ -4,30 +4,32 @@
 # apps/lib and apps/gateway are reachable.
 #
 #   docker build -f apps/gateway/devops/Dockerfile -t <image>:<tag> .
+#
+# We run as root inside the container deliberately. Earlier versions tried
+# USER bun for defense-in-depth, but the OCI agent's legacy Docker builder
+# creates WORKDIR-paths as root regardless of the current USER, so
+# `bun install` failed with EPERM on copyfile. Once the agent moves to
+# BuildKit, USER bun can be reinstated; until then, root keeps the build
+# reliable and the trust boundary lives at the OCI host.
 
 FROM oven/bun:1.3-alpine
 
-# USER before WORKDIR so /app is created bun-owned. Without this the dir
-# is created root-owned, USER bun cannot write into it, and `bun install`
-# fails to materialize node_modules with a cascade of ENOENT link errors.
-USER bun
+USER root
 WORKDIR /app
 
 # Workspace manifests first for better layer cache.
-COPY --chown=bun:bun package.json bun.lock tsconfig.base.json ./
-COPY --chown=bun:bun apps/lib/package.json ./apps/lib/
-COPY --chown=bun:bun apps/gateway/package.json ./apps/gateway/
+COPY package.json bun.lock tsconfig.base.json ./
+COPY apps/lib/package.json ./apps/lib/
+COPY apps/gateway/package.json ./apps/gateway/
 
-# --backend=copyfile avoids hardlinks. The OCI agent runs the legacy
-# Docker builder, whose overlay semantics break Bun's default hardlink
-# install backend with a cascade of ENOENT link errors. Copyfile is
-# slower but works on every builder. Drop this flag once the agent
-# is upgraded to BuildKit.
+# --backend=copyfile avoids hardlinks across overlay layers, which break
+# under the legacy Docker builder. Drop the flag once the agent runs
+# BuildKit.
 RUN bun install --frozen-lockfile --backend=copyfile
 
 # Source.
-COPY --chown=bun:bun apps/lib ./apps/lib
-COPY --chown=bun:bun apps/gateway ./apps/gateway
+COPY apps/lib ./apps/lib
+COPY apps/gateway ./apps/gateway
 
 # Generate the Prisma client into apps/lib/src/generated/prisma/.
 RUN cd apps/lib && bunx prisma generate
