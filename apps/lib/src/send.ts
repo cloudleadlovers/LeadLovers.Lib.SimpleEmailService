@@ -75,9 +75,18 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
 
   let row;
   try {
-    row = await prisma.emails.create({
-      data: { projectId, to, subject, body: message },
-    });
+    const inserted = await prisma.$queryRaw<
+      Array<{ EmailCodi: bigint; EmailDataCada: Date }>
+    >`
+      INSERT INTO EmailSequence (ProjCodi, EmailPara, EmailAssunto, EmailMsg, EmailDataCada, EmailDataEnviar, StatCodi, EmailHtml, EmailTentativas, EmailPrioridade, EmailTipoEnvi)
+      OUTPUT INSERTED.EmailCodi, INSERTED.EmailDataCada
+      VALUES (${projectId}, ${to}, ${subject}, ${message}, GETDATE(), GETDATE(), 1, 1, 0, -1, 1)
+    `;
+    const head = inserted[0];
+    if (!head) {
+      throw new Error('insert returned no rows');
+    }
+    row = { id: head.EmailCodi, createdAt: head.EmailDataCada };
   } catch (err) {
     getLogger().error('send: prisma create failed', { ...ctx, ...errorMeta(err) });
     return {
