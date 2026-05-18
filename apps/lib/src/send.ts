@@ -17,9 +17,11 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
   const parsed = EmailSendInputSchema.safeParse(input);
   if (!parsed.success) {
     const error = parsed.error.issues.map((i) => i.message).join('; ');
+    getLogger().info('send: validation failed', { error });
     return { success: false, code: 'validation_error', error };
   }
   const { projectId, to, subject, message } = parsed.data;
+  const ctx = { projectId, to, subject };
 
   const prisma = getPrisma();
 
@@ -27,6 +29,7 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
   try {
     redis = await getRedis();
   } catch (err) {
+    getLogger().error('send: redis connect failed', { ...ctx, ...errorMeta(err) });
     return { success: false, code: 'cache_error', error: mapRedisError(err) };
   }
 
@@ -42,6 +45,11 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
       };
     }
   } catch (err) {
+    getLogger().error('send: idempotency lookup failed', {
+      ...ctx,
+      hash,
+      ...errorMeta(err),
+    });
     return { success: false, code: 'cache_error', error: mapRedisError(err) };
   }
 
@@ -49,9 +57,14 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
   try {
     decision = await checkRateLimit(redis, projectId, RATE_LIMIT_PER_MINUTE);
   } catch (err) {
+    getLogger().error('send: rate limit check failed', { ...ctx, ...errorMeta(err) });
     return { success: false, code: 'cache_error', error: mapRedisError(err) };
   }
   if (!decision.allowed) {
+    getLogger().warn('send: rate limited', {
+      ...ctx,
+      retryAfterMs: decision.retryAfterMs,
+    });
     return {
       success: false,
       code: 'rate_limited',
@@ -66,6 +79,7 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
       data: { projectId, to, subject, body: message },
     });
   } catch (err) {
+    getLogger().error('send: prisma create failed', { ...ctx, ...errorMeta(err) });
     return {
       success: false,
       code: 'persistence_error',
@@ -83,10 +97,25 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
   try {
     await setCachedNX(redis, hash, { id: row.id, queuedAt: row.createdAt });
   } catch (err) {
-    getLogger().warn('idempotency cache write failed', {
-      error: err instanceof Error ? err.message : String(err),
+    getLogger().warn('send: idempotency cache write failed', {
+      ...ctx,
+      hash,
+      ...errorMeta(err),
     });
   }
 
   return success;
+}
+
+function errorMeta(err: unknown): Record<string, unknown> {
+  if (err instanceof Error) {
+    const e = err as Error & { code?: string };
+    return {
+      error: err.message,
+      name: err.name,
+      code: e.code,
+      stack: err.stack,
+    };
+  }
+  return { error: String(err) };
 }

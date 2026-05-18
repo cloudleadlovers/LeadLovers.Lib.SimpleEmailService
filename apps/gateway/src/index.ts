@@ -1,19 +1,23 @@
 import { email } from '@leadlovers/simple-email-service';
 import { createFetch } from './server.js';
+import { consoleLogger } from './logger.js';
 
 const PORT = Number(process.env.PORT ?? 8787);
+
+email.setLogger(consoleLogger);
 
 const fetch = createFetch({
   email,
   gatewayApiKey: process.env.GATEWAY_API_KEY,
+  logger: consoleLogger,
 });
 
 const server = Bun.serve({ port: PORT, fetch });
 
-console.log(`email gateway listening on http://localhost:${server.port}`);
+consoleLogger.info('email gateway listening', { port: server.port });
 
 const shutdown = async (): Promise<void> => {
-  console.log('shutting down...');
+  consoleLogger.info('shutting down');
   server.stop();
   await email.disconnect();
   process.exit(0);
