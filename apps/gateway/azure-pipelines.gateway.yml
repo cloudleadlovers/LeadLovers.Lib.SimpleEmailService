@@ -44,6 +44,8 @@ variables:
     value: leadlovers-internal
   - name: deployPath
     value: /var/docker/leadlovers/email-gateway/production
+  - name: projectName
+    value: leadlovers-email-gateway
 
 stages:
   - stage: BuildAndPush
@@ -100,8 +102,8 @@ stages:
                     REDIS_URL=$REDIS_URL
                     GATEWAY_API_KEY=$GATEWAY_API_KEY
                     EOF
-                    docker compose pull
-                    docker compose up -d --remove-orphans
+                    docker compose -p "$(projectName)" pull
+                    docker compose -p "$(projectName)" up -d --remove-orphans
                   displayName: stage compose, write .env, compose up
                   env:
                     DATABASE_URL: $(DATABASE_URL)
