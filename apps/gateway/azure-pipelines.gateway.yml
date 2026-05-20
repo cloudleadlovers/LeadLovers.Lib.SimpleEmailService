@@ -22,6 +22,8 @@ trigger:
       - apps/lib/PRD.md
       - apps/lib/devops/github-actions/**
 
+pr: none
+
 pool:
   name: OCI-LeadLovers022
 
