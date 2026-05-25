@@ -20,6 +20,9 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
+      - name: Upgrade npm (trusted publishing requires >=11.5.1)
+        run: npm install -g npm@latest
+
       - name: Build lib
         run: cd apps/lib && bun run build
 
@@ -38,7 +41,5 @@ jobs:
           npm pkg set version="$VERSION"
           echo "Publishing @leadlovers/simple-email-service@$VERSION"
 
-      - name: Publish to npm
+      - name: Publish to npm (OIDC trusted publisher)
         run: cd apps/lib && npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
