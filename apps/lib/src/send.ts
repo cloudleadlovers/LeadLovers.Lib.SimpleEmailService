@@ -1,8 +1,3 @@
-import { EmailSendInputSchema, type EmailSendInput } from './schema.js';
-import type { EmailSendResult, EmailSendSuccess } from './types.js';
-import { getPrisma } from './db/prisma.js';
-import { getRedis } from './cache/redis.js';
-import { mapPrismaError } from './db/error-map.js';
 import { mapRedisError } from './cache/error-map.js';
 import {
   computeIdempotencyHash,
@@ -10,7 +5,12 @@ import {
   setCachedNX,
 } from './cache/idempotency.js';
 import { checkRateLimit, RATE_LIMIT_PER_MINUTE } from './cache/rate-limit.js';
+import { getRedis } from './cache/redis.js';
+import { mapPrismaError } from './db/error-map.js';
+import { getPrisma } from './db/prisma.js';
 import { Messages } from './errors.js';
+import { EmailSendInputSchema, type EmailSendInput } from './schema.js';
+import type { EmailSendResult, EmailSendSuccess } from './types.js';
 import { getLogger } from './utils/logger.js';
 
 export async function send(input: EmailSendInput): Promise<EmailSendResult> {
@@ -29,7 +29,10 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
   try {
     redis = await getRedis();
   } catch (err) {
-    getLogger().error('send: redis connect failed', { ...ctx, ...errorMeta(err) });
+    getLogger().error('send: redis connect failed', {
+      ...ctx,
+      ...errorMeta(err),
+    });
     return { success: false, code: 'cache_error', error: mapRedisError(err) };
   }
 
@@ -57,7 +60,10 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
   try {
     decision = await checkRateLimit(redis, projectId, RATE_LIMIT_PER_MINUTE);
   } catch (err) {
-    getLogger().error('send: rate limit check failed', { ...ctx, ...errorMeta(err) });
+    getLogger().error('send: rate limit check failed', {
+      ...ctx,
+      ...errorMeta(err),
+    });
     return { success: false, code: 'cache_error', error: mapRedisError(err) };
   }
   if (!decision.allowed) {
@@ -78,7 +84,7 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
     const inserted = await prisma.$queryRaw<
       Array<{ EmailCodi: bigint; EmailDataCada: Date }>
     >`
-      INSERT INTO EmailSequence (ProjCodi, EmailPara, EmailAssunto, EmailMsg, EmailDataCada, EmailDataEnviar, StatCodi, EmailHtml, EmailTentativas, EmailPrioridade, EmailTipoEnvi)
+      INSERT INTO dinfo..EmailSequence (ProjCodi, EmailPara, EmailAssunto, EmailMsg, EmailDataCada, EmailDataEnviar, StatCodi, EmailHtml, EmailTentativas, EmailPrioridade, EmailTipoEnvi)
       OUTPUT INSERTED.EmailCodi, INSERTED.EmailDataCada
       VALUES (${projectId}, ${to}, ${subject}, ${message}, GETDATE(), GETDATE(), 1, 1, 0, -1, 1)
     `;
@@ -88,7 +94,10 @@ export async function send(input: EmailSendInput): Promise<EmailSendResult> {
     }
     row = { id: head.EmailCodi, createdAt: head.EmailDataCada };
   } catch (err) {
-    getLogger().error('send: prisma create failed', { ...ctx, ...errorMeta(err) });
+    getLogger().error('send: prisma create failed', {
+      ...ctx,
+      ...errorMeta(err),
+    });
     return {
       success: false,
       code: 'persistence_error',
