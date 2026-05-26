@@ -1,3 +1,8 @@
 {
-  "extends": "../../tsconfig.base.json"
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@leadlovers/simple-email-service": ["../lib/src/index.ts"]
+    }
+  }
 }
